@@ -1,0 +1,38 @@
+clear;
+mu = [0, 0.65] ;#define chemical potential range
+nof=10;#number of points
+loss = matrix(length(mu),nof);#define loss calculation
+n = matrix(length(mu), nof);#define refractive index
+
+for(i=1:length(mu)){
+    switchtolayout;
+    select('analysis group');
+    set('mu', mu(i));
+    
+    setanalysis('wavelength',1300e-9);#define the first point of the wavelength
+    setanalysis('number of trial modes',2);#define number of modes
+    setanalysis('use max index',1); 
+    
+    findmodes;
+    selectmode(1);#select the main mode
+    setanalysis("track selected mode",1);
+    setanalysis('stop wavelength',1800e-9);#define the last point of the wavelength
+    setanalysis('number of points',nof);
+    frequencysweep;
+    n(i, :)=real(getdata("frequencysweep","neff"));
+    loss(i,:) = getdata("frequencysweep","loss")/1e6;
+    f=getdata("frequencysweep","f");
+
+}
+
+    
+plot(c/f*1e6, loss(1,:), loss(2, :),'Wavelength (um)', 'loss (dB/um)' );
+legend('mu = 0eV','mu = 0.65eV');
+plot(c/f*1e6, n(1,:), n(2,:) ,'Wavelength (um)', 'Re(neff)' );
+legend('mu = 0eV','mu = 0.65eV');
+
+plot(c/f*1e6,loss(1,:)-loss(2,:),'Wavelength (um)', 'MD (dB/um)' );
+MD = loss(1,:)-loss(2,:);
+ER = MD*1.37;
+plot(c/f*1e6,MD,'Wavelength (um)', 'MD (dB/um)' );
+plot(c/f*1e6,ER,'Wavelength (um)', 'MD (dB/um)' );
